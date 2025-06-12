@@ -1,20 +1,20 @@
 #!/usr/bin/env node
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+} from "@modelcontextprotocol/sdk/types.js";
 
-import { queryTool } from './tools/query.js';
-import { describeTableTool, getConstraintsTool } from './tools/describe.js';
-import { listTablesTool } from './tools/list.js';
-import { closeDb } from './db.js';
+import { queryTool } from "./tools/query.js";
+import { describeTableTool, getConstraintsTool } from "./tools/describe.js";
+import { listTablesTool } from "./tools/list.js";
+import { closeDb } from "./db.js";
 
 const server = new Server(
   {
-    name: 'kysely-mcp',
-    version: '1.0.0',
+    name: "postgres-mcp-server",
+    version: "1.0.0",
   },
   {
     capabilities: {
@@ -27,66 +27,66 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: 'query',
-        description: 'Execute raw SQL queries on the database',
+        name: "query",
+        description: "Execute raw SQL queries on the database",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             sql: {
-              type: 'string',
-              description: 'The SQL query to execute',
+              type: "string",
+              description: "The SQL query to execute",
             },
           },
-          required: ['sql'],
+          required: ["sql"],
         },
       },
       {
-        name: 'describe_table',
-        description: 'Get the structure of a database table',
+        name: "describe_table",
+        description: "Get the structure of a database table",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             schema: {
-              type: 'string',
-              description: 'The schema name',
+              type: "string",
+              description: "The schema name",
             },
             table: {
-              type: 'string',
-              description: 'The table name',
+              type: "string",
+              description: "The table name",
             },
           },
-          required: ['schema', 'table'],
+          required: ["schema", "table"],
         },
       },
       {
-        name: 'list_tables',
-        description: 'List all tables in a schema',
+        name: "list_tables",
+        description: "List all tables in a schema",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             schema: {
-              type: 'string',
-              description: 'The schema name (default: public)',
+              type: "string",
+              description: "The schema name (default: public)",
             },
           },
         },
       },
       {
-        name: 'get_constraints',
-        description: 'Get constraints for a table',
+        name: "get_constraints",
+        description: "Get constraints for a table",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             schema: {
-              type: 'string',
-              description: 'The schema name',
+              type: "string",
+              description: "The schema name",
             },
             table: {
-              type: 'string',
-              description: 'The table name',
+              type: "string",
+              description: "The table name",
             },
           },
-          required: ['schema', 'table'],
+          required: ["schema", "table"],
         },
       },
     ],
@@ -98,48 +98,48 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
-      case 'query': {
+      case "query": {
         const result = await queryTool(args as any);
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(result, null, 2),
             },
           ],
         };
       }
 
-      case 'describe_table': {
+      case "describe_table": {
         const result = await describeTableTool(args as any);
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(result, null, 2),
             },
           ],
         };
       }
 
-      case 'list_tables': {
+      case "list_tables": {
         const result = await listTablesTool(args as any);
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(result, null, 2),
             },
           ],
         };
       }
 
-      case 'get_constraints': {
+      case "get_constraints": {
         const result = await getConstraintsTool(args as any);
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(result, null, 2),
             },
           ],
@@ -153,10 +153,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify(
             {
-              error: error instanceof Error ? error.message : 'Unknown error',
+              error: error instanceof Error ? error.message : "Unknown error",
             },
             null,
             2
@@ -172,8 +172,8 @@ async function shutdown() {
   process.exit(0);
 }
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 async function main() {
   const transport = new StdioServerTransport();
@@ -181,6 +181,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error('Server error:', error);
+  console.error("Server error:", error);
   process.exit(1);
 });

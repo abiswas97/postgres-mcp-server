@@ -1,6 +1,6 @@
-# Kysely-MCP
+# Postgres MCP Server
 
-A Model Context Protocol (MCP) server that provides database access through Kysely.
+A Model Context Protocol (MCP) server that provides database access to Postgres through Kysely.
 
 ## Features
 
@@ -88,9 +88,9 @@ Edit `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "kysely-mcp": {
+    "postgres-mcp-server": {
       "command": "node",
-      "args": ["/path/to/kysely-mcp/dist/index.js"],
+      "args": ["/path/to/postgres-mcp-server/dist/index.js"],
       "env": {
         "DB_HOST": "127.0.0.1",
         "DB_PORT": "5432",

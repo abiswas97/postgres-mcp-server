@@ -1,11 +1,11 @@
 {
-  "name": "kysely-mcp",
+  "name": "postgres-mcp-server",
   "version": "1.0.0",
   "description": "Model Context Protocol server for Kysely database operations",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "kysely-mcp": "dist/index.js"
+    "postgres-mcp-server": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
