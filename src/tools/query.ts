@@ -22,6 +22,7 @@ const DANGEROUS_OPERATIONS = [
   "GRANT",
   "REVOKE",
   "VACUUM",
+  "ANALYZE",
   "CLUSTER",
   "REINDEX",
   "COPY",
