@@ -1,14 +1,14 @@
 {
   "mcpServers": {
     "postgres-mcp-server": {
-      "command": "node",
-      "args": ["/path/to/postgres-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["postgres-mcp-server"],
       "env": {
         "DB_HOST": "127.0.0.1",
         "DB_PORT": "5432",
         "DB_USER": "postgres",
         "DB_PASSWORD": "your_password_here",
-        "DB_NAME": "postgres",
+        "DB_NAME": "your_database_name",
         "DB_SSL": "true"
       }
     }

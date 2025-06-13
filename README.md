@@ -1,6 +1,6 @@
 # Postgres MCP Server
 
-A Model Context Protocol (MCP) server that provides database access to Postgres through Kysely.
+A Model Context Protocol (MCP) server that provides secure database access to PostgreSQL through Kysely ORM. This server enables Claude Desktop to interact with PostgreSQL databases using natural language.
 
 ## Features
 
@@ -8,12 +8,12 @@ A Model Context Protocol (MCP) server that provides database access to Postgres 
 - **Type Safety**: Full TypeScript support with typed inputs/outputs
 - **Connection Pooling**: Configurable connection limits with idle timeout
 - **Error Handling**: Graceful error messages for connection and query issues
+- **Security**: Parameterized queries to prevent SQL injection
 
 ## Installation
 
 ```bash
-npm install
-npm run build
+npx postgres-mcp-server
 ```
 
 ## Configuration
@@ -46,6 +46,11 @@ Execute raw SQL queries on the database.
   "sql": "SELECT * FROM users WHERE active = true LIMIT 10"
 }
 ```
+
+**Response:**
+
+- For SELECT queries: Returns rows as JSON array
+- For INSERT/UPDATE/DELETE: Returns affected row count
 
 ### 2. `describe_table`
 
@@ -89,14 +94,14 @@ Edit `claude_desktop_config.json`:
 {
   "mcpServers": {
     "postgres-mcp-server": {
-      "command": "node",
-      "args": ["/path/to/postgres-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["postgres-mcp-server"],
       "env": {
         "DB_HOST": "127.0.0.1",
         "DB_PORT": "5432",
         "DB_USER": "postgres",
         "DB_PASSWORD": "your_password_here",
-        "DB_NAME": "postgres",
+        "DB_NAME": "your_database_name",
         "DB_SSL": "true"
       }
     }
@@ -104,9 +109,19 @@ Edit `claude_desktop_config.json`:
 }
 ```
 
+### Configuration File Locations
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
 ## Development
 
 ```bash
+# Clone and install dependencies
+git clone https://github.com/abiswas97/postgres-mcp-server.git
+cd postgres-mcp-server
+npm install
+
 # Run in development mode with hot reload
 npm run dev
 
@@ -115,4 +130,23 @@ npm run build
 
 # Run tests
 npm run test
+
+# Run specific test suites
+npm run test:unit
+npm run test:integration
 ```
+
+## Environment Variables
+
+| Variable      | Default     | Description           |
+| ------------- | ----------- | --------------------- |
+| `DB_HOST`     | `127.0.0.1` | PostgreSQL host       |
+| `DB_PORT`     | `5432`      | PostgreSQL port       |
+| `DB_USER`     | `postgres`  | Database user         |
+| `DB_PASSWORD` | _required_  | Database password     |
+| `DB_NAME`     | `postgres`  | Database name         |
+| `DB_SSL`      | `true`      | Enable SSL connection |
+
+## License
+
+ISC

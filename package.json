@@ -1,12 +1,18 @@
 {
   "name": "postgres-mcp-server",
   "version": "1.0.0",
-  "description": "Model Context Protocol server for Kysely database operations",
+  "description": "Model Context Protocol server for PostgreSQL database operations",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "postgres-mcp-server": "dist/index.js"
   },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
@@ -15,16 +21,33 @@
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "prepublishOnly": "npm run build && npm test",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major"
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "kysely",
     "database",
-    "postgresql"
+    "postgresql",
+    "postgres",
+    "sql",
+    "orm",
+    "typescript"
   ],
-  "author": "",
+  "author": "Avi <avishek.biswas.1997@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abiswas97/postgres-mcp-server.git"
+  },
+  "homepage": "https://github.com/abiswas97/postgres-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/abiswas97/postgres-mcp-server/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
     "kysely": "^0.27.3",
