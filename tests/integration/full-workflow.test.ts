@@ -6,6 +6,10 @@ describe('Full Workflow Integration Tests', () => {
   let testEnv: Awaited<ReturnType<typeof createTestEnvironment>> | null = null;
 
   beforeAll(async () => {
+    // Set environment for write operations
+    process.env.READ_ONLY = 'false';
+    process.env.NODE_ENV = 'development';
+    
     try {
       testEnv = await createTestEnvironment();
     } catch (error) {
@@ -133,41 +137,46 @@ describe('Full Workflow Integration Tests', () => {
             userId = userQuery.rows![0].id;
           }
 
-          // Update user
+          // Update user using parameterized query
           const updateResult = await queryTool({
-            sql: `UPDATE testschema.users SET age = 26 WHERE id = ${userId}`
+            sql: `UPDATE testschema.users SET age = 26 WHERE id = $1`,
+            parameters: [userId]
           });
           expect(updateResult.error).toBeUndefined();
           expect(updateResult.rowCount).toBe(1);
 
-          // Verify update
+          // Verify update using parameterized query
           const verifyUpdate = await queryTool({
-            sql: `SELECT age FROM testschema.users WHERE id = ${userId}`
+            sql: `SELECT age FROM testschema.users WHERE id = $1`,
+            parameters: [userId]
           });
           expect(verifyUpdate.error).toBeUndefined();
           expect(verifyUpdate.rows![0].age).toBe(26);
 
-          // Test foreign key relationships - insert post for user
+          // Test foreign key relationships - insert post for user using parameterized query
           const postInsert = await queryTool({
             sql: `
               INSERT INTO testschema.posts (user_id, title, content, published) 
-              VALUES (${userId}, 'Test Post', 'Integration test content', true)
+              VALUES ($1, $2, $3, $4)
               RETURNING id
-            `
+            `,
+            parameters: [userId, 'Test Post', 'Integration test content', true]
           });
           expect(postInsert.error).toBeUndefined();
 
-          // Clean up - delete post first (foreign key constraint)
+          // Clean up - delete post first (foreign key constraint) using parameterized query
           if (postInsert.rows && postInsert.rows.length > 0) {
             const deletePost = await queryTool({
-              sql: `DELETE FROM testschema.posts WHERE id = ${postInsert.rows[0].id}`
+              sql: `DELETE FROM testschema.posts WHERE id = $1`,
+              parameters: [postInsert.rows[0].id]
             });
             expect(deletePost.error).toBeUndefined();
           }
 
-          // Delete user
+          // Delete user using parameterized query
           const deleteUser = await queryTool({
-            sql: `DELETE FROM testschema.users WHERE id = ${userId}`
+            sql: `DELETE FROM testschema.users WHERE id = $1`,
+            parameters: [userId]
           });
           expect(deleteUser.error).toBeUndefined();
           expect(deleteUser.rowCount).toBe(1);
@@ -191,7 +200,7 @@ describe('Full Workflow Integration Tests', () => {
             sql: 'INVALID SQL SYNTAX'
           });
           expect(invalidQuery.error).toBeDefined();
-          expect(invalidQuery.error).toContain('syntax error');
+          expect(invalidQuery.error).toContain('SQL syntax error');
 
           // Test constraint violation
           const duplicateEmail = await queryTool({
@@ -201,7 +210,7 @@ describe('Full Workflow Integration Tests', () => {
             `
           });
           expect(duplicateEmail.error).toBeDefined();
-          expect(duplicateEmail.error).toContain('duplicate key value');
+          expect(duplicateEmail.error).toContain('Duplicate value');
 
           // Test non-existent table
           const nonExistentTable = await describeTableTool({

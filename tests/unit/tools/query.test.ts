@@ -33,6 +33,12 @@ jest.mock('../../../src/db', () => ({
 }));
 
 describe('Query Tool Unit Tests', () => {
+  beforeAll(() => {
+    // Set READ_ONLY=false for unit tests that test write operations
+    process.env.READ_ONLY = 'false';
+    process.env.NODE_ENV = 'development';
+  });
+
   afterEach(async () => {
     await cleanupDatabase();
     jest.clearAllMocks();
@@ -89,7 +95,7 @@ describe('Query Tool Unit Tests', () => {
     test('should handle UPDATE queries correctly', async () => {
       const { queryTool } = await import('../../../src/tools/query');
       
-      const result = await queryTool({ sql: 'UPDATE users SET name = \'updated\'' });
+      const result = await queryTool({ sql: 'UPDATE users SET name = \'updated\' WHERE id = 1' });
       
       expect(result.rows).toBeUndefined();
       expect(result.rowCount).toBe(1);
@@ -102,6 +108,24 @@ describe('Query Tool Unit Tests', () => {
       
       expect(result.rows).toBeUndefined();
       expect(result.rowCount).toBe(1);
+    });
+
+    test('should block UPDATE queries without WHERE clause', async () => {
+      const { queryTool } = await import('../../../src/tools/query');
+      
+      const result = await queryTool({ sql: 'UPDATE users SET name = \'updated\'' });
+      
+      expect(result.error).toBeDefined();
+      expect(result.error).toContain('WHERE clause');
+    });
+
+    test('should block DELETE queries without WHERE clause', async () => {
+      const { queryTool } = await import('../../../src/tools/query');
+      
+      const result = await queryTool({ sql: 'DELETE FROM users' });
+      
+      expect(result.error).toBeDefined();
+      expect(result.error).toContain('WHERE clause');
     });
   });
 
@@ -129,7 +153,7 @@ describe('Query Tool Unit Tests', () => {
       
       const result = await queryTool({ sql: 'SELECT 1' });
       
-      expect(result.error).toBe('Unknown error occurred');
+      expect(result.error).toBe('Database operation failed');
     });
   });
 
@@ -150,6 +174,17 @@ describe('Query Tool Unit Tests', () => {
       const { queryTool } = await import('../../../src/tools/query');
       
       const result = await queryTool({ sql: 'INSERT INTO users (name) VALUES (\'test\')' });
+      
+      expect(result).not.toHaveProperty('rows');
+      expect(result).toHaveProperty('rowCount');
+      expect(result).not.toHaveProperty('error');
+      expect(typeof result.rowCount).toBe('number');
+    });
+
+    test('should return only rowCount for UPDATE queries with WHERE', async () => {
+      const { queryTool } = await import('../../../src/tools/query');
+      
+      const result = await queryTool({ sql: 'UPDATE users SET name = \'test\' WHERE id = 1' });
       
       expect(result).not.toHaveProperty('rows');
       expect(result).toHaveProperty('rowCount');

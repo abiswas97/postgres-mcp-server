@@ -22,7 +22,7 @@ jest.mock('../../../src/db', () => ({
   closeDb: jest.fn(() => Promise.resolve())
 }));
 
-describe('List Tables Tool Unit Tests', () => {
+describe('List Tools Unit Tests', () => {
   afterEach(async () => {
     await cleanupDatabase();
     jest.clearAllMocks();
@@ -147,6 +147,130 @@ describe('List Tables Tool Unit Tests', () => {
       const result = await listTablesTool({ schema: 'public' });
       
       expect(result.error).toBe('Unknown error occurred');
+    });
+  });
+
+  describe('List Views Tool', () => {
+    beforeEach(() => {
+      const { sql } = require('kysely');
+      const mockSql = sql as jest.MockedFunction<typeof sql>;
+      
+      mockSql.mockImplementation(() => ({
+        execute: jest.fn(() => Promise.resolve({
+          rows: [
+            {
+              schema_name: 'public',
+              view_name: 'user_summary',
+              view_definition: 'SELECT id, name, email FROM users WHERE active = true',
+              is_updatable: 'YES',
+              check_option: 'NONE'
+            },
+            {
+              schema_name: 'public',
+              view_name: 'published_posts',
+              view_definition: 'SELECT * FROM posts WHERE published = true',
+              is_updatable: 'NO',
+              check_option: 'NONE'
+            }
+          ]
+        }))
+      }));
+    });
+
+    describe('Input Validation', () => {
+      test('should accept valid schema input', async () => {
+        const { listViewsTool } = await import('../../../src/tools/list');
+        
+        const result = await listViewsTool({ schema: 'public' });
+        
+        expect(result).toBeDefined();
+        expect(typeof result).toBe('object');
+      });
+
+      test('should use default schema when none provided', async () => {
+        const { listViewsTool } = await import('../../../src/tools/list');
+        
+        const result = await listViewsTool({});
+        
+        expect(result).toBeDefined();
+        expect(result.views).toBeDefined();
+      });
+    });
+
+    describe('Return Value Structure', () => {
+      test('should return views array', async () => {
+        const { listViewsTool } = await import('../../../src/tools/list');
+        
+        const result = await listViewsTool({ schema: 'public' });
+        
+        expect(result).toHaveProperty('views');
+        expect(result).not.toHaveProperty('error');
+        expect(Array.isArray(result.views)).toBe(true);
+      });
+
+      test('should return view objects with correct structure', async () => {
+        const { listViewsTool } = await import('../../../src/tools/list');
+        
+        const result = await listViewsTool({ schema: 'public' });
+        
+        expect(result.views).toBeDefined();
+        expect(result.views!.length).toBeGreaterThan(0);
+        
+        const firstView = result.views![0];
+        expect(firstView).toHaveProperty('schema_name');
+        expect(firstView).toHaveProperty('view_name');
+        expect(firstView).toHaveProperty('view_definition');
+        expect(firstView).toHaveProperty('is_updatable');
+        expect(firstView).toHaveProperty('check_option');
+        expect(typeof firstView.schema_name).toBe('string');
+        expect(typeof firstView.view_name).toBe('string');
+        expect(typeof firstView.view_definition).toBe('string');
+        expect(typeof firstView.is_updatable).toBe('string');
+        expect(typeof firstView.check_option).toBe('string');
+      });
+
+      test('should include view definitions', async () => {
+        const { listViewsTool } = await import('../../../src/tools/list');
+        
+        const result = await listViewsTool({ schema: 'public' });
+        
+        const viewWithDefinition = result.views!.find(v => v.view_definition.includes('SELECT'));
+        expect(viewWithDefinition).toBeDefined();
+      });
+    });
+
+    describe('Error Handling', () => {
+      test('should return error object for failed queries', async () => {
+        const { sql } = await import('kysely');
+        const mockSql = sql as jest.MockedFunction<typeof sql>;
+        
+        mockSql.mockImplementationOnce(() => ({
+          execute: jest.fn(() => Promise.reject(new Error('Database error')))
+        } as any));
+
+        const { listViewsTool } = await import('../../../src/tools/list');
+        
+        const result = await listViewsTool({ schema: 'public' });
+        
+        expect(result.error).toBeDefined();
+        expect(typeof result.error).toBe('string');
+        expect(result.views).toBeUndefined();
+      });
+
+      test('should handle non-Error exceptions', async () => {
+        const { sql } = await import('kysely');
+        const mockSql = sql as jest.MockedFunction<typeof sql>;
+        
+        mockSql.mockImplementationOnce(() => ({
+          execute: jest.fn(() => Promise.reject('string error'))
+        } as any));
+
+        const { listViewsTool } = await import('../../../src/tools/list');
+        
+        const result = await listViewsTool({ schema: 'public' });
+        
+        expect(result.error).toBe('Unknown error occurred');
+      });
     });
   });
 });
