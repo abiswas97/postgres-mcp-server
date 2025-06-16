@@ -1,5 +1,9 @@
 # Postgres MCP Server
 
+[![npm version](https://badge.fury.io/js/postgres-mcp-server.svg)](https://www.npmjs.com/package/postgres-mcp-server)
+[![Tests](https://github.com/abiswas97/postgres-mcp-server/actions/workflows/test.yml/badge.svg)](https://github.com/abiswas97/postgres-mcp-server/actions/workflows/test.yml)
+[![GitHub issues](https://img.shields.io/github/issues/abiswas97/postgres-mcp-server)](https://github.com/abiswas97/postgres-mcp-server/issues)
+
 A Model Context Protocol (MCP) server that provides secure database access to PostgreSQL through Kysely ORM. This server enables Claude Desktop to interact with PostgreSQL databases using natural language.
 
 ## Features
@@ -31,58 +35,24 @@ DB_SSL=true
 
 ## Available Tools
 
-### 1. `query`
+| Tool                  | Description                                 | Required Parameters                 | Optional Parameters                                         |
+| --------------------- | ------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
+| **`query`**           | Execute SQL queries with pagination support | `sql` (string)                      | `pageSize` (1-500), `offset` (number), `parameters` (array) |
+| **`describe_table`**  | Get table structure and column details      | `schema` (string), `table` (string) | -                                                           |
+| **`list_tables`**     | List all tables in a schema                 | `schema` (string)                   | -                                                           |
+| **`list_schemas`**    | List all schemas in the database            | -                                   | `includeSystemSchemas` (boolean)                            |
+| **`get_constraints`** | Get table constraints (PK, FK, etc.)        | `schema` (string), `table` (string) | -                                                           |
+| **`list_indexes`**    | List indexes for a table or schema          | `schema` (string)                   | `table` (string)                                            |
+| **`list_views`**      | List views in a schema                      | `schema` (string)                   | -                                                           |
+| **`list_functions`**  | List functions and procedures               | `schema` (string)                   | -                                                           |
+| **`explain_query`**   | Get query execution plan                    | `sql` (string)                      | `analyze` (boolean), `format` (text/json/xml/yaml)          |
+| **`get_table_stats`** | Get table size and statistics               | `schema` (string)                   | `table` (string)                                            |
 
-Execute raw SQL queries on the database.
+### Key Features
 
-**Input:**
-
-- `sql` (string): The SQL query to execute
-
-**Example:**
-
-```json
-{
-  "sql": "SELECT * FROM users WHERE active = true LIMIT 10"
-}
-```
-
-**Response:**
-
-- For SELECT queries: Returns rows as JSON array
-- For INSERT/UPDATE/DELETE: Returns affected row count
-
-### 2. `describe_table`
-
-Get the structure of a database table.
-
-**Input:**
-
-- `schema` (string): The schema name
-- `table` (string): The table name
-
-**Returns:** Column information including name, data type, length, nullable, and default values.
-
-### 3. `list_tables`
-
-List all tables in a schema.
-
-**Input:**
-
-- `schema` (string, optional): The schema name (defaults to 'public')
-
-**Returns:** Table names and types (BASE TABLE or VIEW).
-
-### 4. `get_constraints`
-
-Get constraints for a table.
-
-**Input:**
-
-- `schema` (string): The schema name
-- `table` (string): The table name
-
-**Returns:** Constraint names, types, and definitions.
+- **Pagination**: Query tool supports up to 500 rows per page with automatic LIMIT/OFFSET handling
+- **Security**: Parameterized queries prevent SQL injection, READ_ONLY mode by default
+- **Type Safety**: Full TypeScript support with Zod schema validation
 
 ## Claude Desktop Configuration
 
@@ -138,14 +108,18 @@ npm run test:integration
 
 ## Environment Variables
 
-| Variable      | Default     | Description           |
-| ------------- | ----------- | --------------------- |
-| `DB_HOST`     | `127.0.0.1` | PostgreSQL host       |
-| `DB_PORT`     | `5432`      | PostgreSQL port       |
-| `DB_USER`     | `postgres`  | Database user         |
-| `DB_PASSWORD` | _required_  | Database password     |
-| `DB_NAME`     | `postgres`  | Database name         |
-| `DB_SSL`      | `true`      | Enable SSL connection |
+| Variable            | Default     | Description                             |
+| ------------------- | ----------- | --------------------------------------- |
+| `DB_HOST`           | `127.0.0.1` | PostgreSQL host                         |
+| `DB_PORT`           | `5432`      | PostgreSQL port                         |
+| `DB_USER`           | `postgres`  | Database user                           |
+| `DB_PASSWORD`       | _required_  | Database password                       |
+| `DB_NAME`           | `postgres`  | Database name                           |
+| `DB_SSL`            | `true`      | Enable SSL connection                   |
+| `READ_ONLY`         | `true`      | Restrict to SELECT/WITH/EXPLAIN queries |
+| `QUERY_TIMEOUT`     | `30000`     | Query timeout in milliseconds           |
+| `MAX_PAGE_SIZE`     | `500`       | Maximum rows per page                   |
+| `DEFAULT_PAGE_SIZE` | `100`       | Default page size when not specified    |
 
 ## License
 
